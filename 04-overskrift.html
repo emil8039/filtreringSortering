@@ -1,24 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>03-virker</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Persongalleri</title>
     <style>
-     * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-       }
-
-      section {
+      main {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
       }
+
       article {
         border: 1px solid orange;
         padding: 10px;
@@ -27,15 +18,9 @@
 
       img {
         max-width: 100%;
-        height: auto;
       }
 
-      h1 {
-          display: flex;
-          justify-content: center;
-      }
-
-      nav {
+      header nav {
         display: flex;
         justify-content: center;
         gap: 10px;
@@ -44,86 +29,88 @@
       .valgt {
         background-color: red;
       }
-
     </style>
-  <body>
-      <main>
-          
-        <header>
-            <h1>Persongalleri</h1>
-          <nav>
-            <button data-troende="alle">Alle</button>
-            <button data-troende="ja" class="valgt">Troende</button>
-            <button data-troende="nej">Ikke troende</button>
-            <button data-troende="tvivler">Tvivler</button>
-          </nav>
-        </header>
-    <section></section>
+  </head>
 
-    </main>
+  <body>
+    <header>
+      <h1>Alle</h1>
+      <nav>
+        <button data-troende="alle" class="valgt">Alle</button>
+        <button data-troende="ja" class="">Troende</button>
+        <button data-troende="nej" class="">Ikke troende</button>
+        <button data-troende="tvivler" class="">Tvivler</button>
+      </nav>
+    </header>
+
+    <h2>Persongalleri</h2>
+    <main id="liste"></main>
 
     <template>
       <article>
         <h2 class="navn"></h2>
-        <img src="" alt="" class="billede"/>
+        <img src="" alt="" class="billede" />
+        <p class="titel"></p>
         <p class="fødselsdag"></p>
-        <p class="hobby"></p>
       </article>
     </template>
+
     <script>
-      //Kontroller om DOM´en er loaded
-      window.addEventListener("DOMContentLoaded", start);
+      const url = "https://persongalleri-5d3e.restdb.io/rest/persongalleri";
+      let personer;
+      let filter = "ja";
+      const main = document.querySelector("main");
+
+      const options = {
+        headers: {
+          "x-apikey": "600fe9211346a1524ff12e31",
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", start);
 
       function start() {
-        
-        const url = "https://persongalleri-5d3e.restdb.io/rest/persongalleri";
-        const key = "600fe9211346a1524ff12e31"
-        const options = {
-            headers: {
-                'x-apikey': key
-            }
-        };
-
-        let personer;
-        let filter = "alle";
-    
         const filterKnapper = document.querySelectorAll("nav button");
-        filterKnapper.forEach(knap => knap.addEventListener("click", filtrerPersoner));
-        loadJSON();
+        filterKnapper.forEach((knap) =>
+          knap.addEventListener("click", filtrerPersoner)
+        );
+        hentdata();
+      }
 
-        function filtrerPersoner(){
-            const header = document.querySelector("header h1");
-          filter = this.dataset.troende;
-          vis();
-          header.textContent = this.textContent;
-        }
+      function filtrerPersoner(event) {
+        const header = document.querySelector("header h1");
+        console.log(event.target.getAttribute("data-troende"));
+        filter = this.dataset.troende;
+        vis();
+        header.textContent = this.textContent;
+      }
 
-        async function loadJSON() {
-          const JSONData = await fetch(url, options);
-          const jsonFil = await JSONData.json();
-          personer = jsonFil;
-          console.log(jsonFil);
-          vis();
-        }
+      async function hentdata() {
+        const response = await fetch(url, options);
+        const json = await response.json();
+        personer = json;
+        vis();
+      }
 
-        function vis() {
-          //løb igennem array "personer"
-          const container = document.querySelector("section");
-          const temp = document.querySelector("template");
-          container.textContent = "";
+      function vis() {
+        const dest = document.querySelector("#liste");
+        const template = document.querySelector("template").content;
 
-          personer.forEach((person) => {
-            if (filter == person.troende || filter == "alle") {
-            let klon = temp.cloneNode(true).content;
-            klon.querySelector(".navn").textContent = person.fornavn + " " + person.efternavn;
+        dest.textContent = "";
+        console.log("Personerne er: " + filter);
+        personer.forEach((person) => {
+          if (person.troende == filter || filter == "alle") {
+            const klon = template.cloneNode(true);
+            klon.querySelector(".navn").textContent =
+              person.fornavn + " " + person.efternavn;
             klon.querySelector(".billede").src = "faces/" + person.billede;
-            klon.querySelector(".fødselsdag").textContent = `Født: ${person.fødselsdag}`;
-            klon.querySelector(".hobby").textContent = `Hobby: ${person.hobby}`;
-            container.appendChild(klon);
-            }
-          });
+            klon.querySelector(".billede").alt = "person.billede";
+            klon.querySelector(".titel").textContent = person.titel;
+            klon.querySelector(".fødselsdag").textContent = person.fødselsdag;
+            main.appendChild(klon);
           }
-        }
+        });
+      }
     </script>
-</body>
+  </body>
 </html>
